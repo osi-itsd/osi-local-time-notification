@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Time — OSI IT Service Desk</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0E17'/%3E%3Ccircle cx='16' cy='16' r='10.5' fill='none' stroke='%2334D8C6' stroke-width='2'/%3E%3Cpath d='M16 9.5V16l5 3' fill='none' stroke='%2334D8C6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0E17;
+    --panel: #121826;
+    --panel-border: #232B3D;
+    --text: #EDEFF4;
+    --muted: #6B7280;
+    --accent: #34D8C6;
+    --reference: #F2B84B;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(52,216,198,0.06), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(242,184,75,0.05), transparent 40%);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .board {
+    width: 100%;
+    max-width: 480px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 36px 32px 28px;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    flex-shrink: 0;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+    50%      { opacity: 0.5; box-shadow: 0 0 3px var(--accent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; }
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+    margin: 0 0 20px;
+    letter-spacing: -0.01em;
+  }
+
+  .board-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 8px 0 6px;
+  }
+
+  .flap {
+    position: relative;
+    background: #0D1220;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    width: 44px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 32px;
+    color: var(--text);
+    overflow: hidden;
+  }
+  .flap::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 1px;
+    background: rgba(0,0,0,0.5);
+  }
+  .flap.colon {
+    width: 16px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 28px;
+  }
+  .flap.colon::after { display: none; }
+  .flap .char {
+    animation: flip-in 0.55s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes flip-in {
+    0%   { transform: rotateX(90deg); opacity: 0; }
+    60%  { transform: rotateX(-8deg); opacity: 1; }
+    100% { transform: rotateX(0deg); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flap .char { animation: none; }
+  }
+
+  .meridiem {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .date-line {
+    text-align: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--text);
+    margin-top: 18px;
+  }
+
+  .zone-line {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--panel-border);
+    margin: 24px 0 16px;
+  }
+
+  .ref-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .reference {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .reference .tag {
+    min-width: 42px;
+    text-align: center;
+    background: rgba(242,184,75,0.12);
+    color: var(--reference);
+    border: 1px solid rgba(242,184,75,0.3);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+
+  .reference span:last-child {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    color: var(--text);
+  }
+
+  .state-message {
+    text-align: center;
+    padding: 20px 4px 4px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .state-message strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <div class="eyebrow"><span class="dot"></span> OSI IT Service Desk</div>
+  <h1 id="context-title">Your local time for this notification</h1>
+
+  <div id="clock-area">
+    <div class="board-row" id="time-row"></div>
+    <div class="meridiem" id="meridiem"></div>
+    <div class="date-line" id="date-line"></div>
+    <div class="zone-line" id="zone-line"></div>
+  </div>
+
+  <div id="empty-error" style="display:none;" class="state-message"></div>
+
+  <div class="divider"></div>
+  <div class="ref-table" id="ref-table">
+    <div class="reference"><span class="tag" id="tag-pt">PT</span><span id="ref-pt">—</span></div>
+    <div class="reference"><span class="tag" id="tag-uk">GMT</span><span id="ref-uk">—</span></div>
+    <div class="reference"><span class="tag">IST</span><span id="ref-ist">—</span></div>
+  </div>
+</div>
+
+<script>
+  // ---------------------------------------------------------------------
+  // Input: ?pst=2026-07-08T07:00:00  — the time as it should be read in
+  // US Pacific time (PST or PDT, resolved automatically for that date).
+  // No offset needed in the link itself; this page works it out.
+  // ---------------------------------------------------------------------
+  const params = new URLSearchParams(window.location.search);
+  const pstParam = params.get('pst');
+
+  const clockArea = document.getElementById('clock-area');
+  const emptyError = document.getElementById('empty-error');
+  const contextTitle = document.getElementById('context-title');
+
+  function showState(html) {
+    clockArea.style.display = 'none';
+    document.querySelector('.divider').style.display = 'none';
+    document.getElementById('ref-table').style.display = 'none';
+    emptyError.style.display = 'block';
+    emptyError.innerHTML = html;
+  }
+
+  // Converts a "wall clock" date/time string (no offset) interpreted in a
+  // given IANA timezone into a true UTC Date object.
+  function zonedTimeToUtc(dateTimeStr, timeZone) {
+    const naive = new Date(dateTimeStr.replace(' ', 'T') + 'Z'); // treat literally as UTC first
+    if (isNaN(naive.getTime())) return null;
+    const asIfUTC = new Date(naive.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const asIfZoned = new Date(naive.toLocaleString('en-US', { timeZone }));
+    const offset = asIfUTC.getTime() - asIfZoned.getTime();
+    return new Date(naive.getTime() + offset);
+  }
+
+  function formatZone(d, timeZone) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+      timeZone, timeZoneName: 'short'
+    }).formatToParts(d);
+    let label = '', dateBits = [], timeBits = [];
+    parts.forEach(p => {
+      if (p.type === 'timeZoneName') label = p.value;
+      else if (['day','month','year'].includes(p.type)) dateBits.push(p.value);
+      else if (['hour','minute'].includes(p.type)) timeBits.push(p.value);
+    });
+    return { label, text: `${dateBits[0]} ${dateBits[1]} ${dateBits[2]}, ${timeBits.join(':')}` };
+  }
+
+  if (!pstParam) {
+    contextTitle.textContent = 'No time to display';
+    showState('This page shows a notification time converted to <strong>your</strong> device\'s timezone. Open it using the link from your outage email — this view has no time attached yet.');
+  } else {
+    const d = zonedTimeToUtc(pstParam, 'America/Los_Angeles');
+    if (!d || isNaN(d.getTime())) {
+      contextTitle.textContent = 'Link could not be read';
+      showState('The time in this link isn\'t in a format this page understands. Please use the link exactly as it appeared in the notification email.');
+    } else {
+      // --- Big split-flap readout: viewer's own local time ---
+      const timeParts = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })
+        .formatToParts(d);
+      let hh = '', mm = '', ampm = '';
+      timeParts.forEach(p => {
+        if (p.type === 'hour') hh = p.value.padStart(2, '0');
+        if (p.type === 'minute') mm = p.value;
+        if (p.type === 'dayPeriod') ampm = p.value.toUpperCase();
+      });
+
+      const row = document.getElementById('time-row');
+      [hh[0], hh[1], ':', mm[0], mm[1]].forEach(ch => {
+        const flap = document.createElement('div');
+        flap.className = ch === ':' ? 'flap colon' : 'flap';
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = ch;
+        flap.appendChild(span);
+        row.appendChild(flap);
+      });
+
+      document.getElementById('meridiem').textContent = ampm;
+      document.getElementById('date-line').textContent =
+        new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+
+      const zoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const offsetMin = -d.getTimezoneOffset();
+      const offsetH = Math.floor(Math.abs(offsetMin) / 60);
+      const offsetM = Math.abs(offsetMin) % 60;
+      const offsetStr = `UTC${offsetMin >= 0 ? '+' : '-'}${offsetH}${offsetM ? ':' + String(offsetM).padStart(2,'0') : ''}`;
+      document.getElementById('zone-line').textContent = `${zoneName} (${offsetStr})`;
+
+      // --- Fixed reference rows: Pacific, UK, India ---
+      const pt = formatZone(d, 'America/Los_Angeles');
+      document.getElementById('tag-pt').textContent = pt.label;   // PST or PDT
+      document.getElementById('ref-pt').textContent = pt.text;
+
+      const uk = formatZone(d, 'Europe/London');
+      document.getElementById('tag-uk').textContent = uk.label;   // GMT or BST
+      document.getElementById('ref-uk').textContent = uk.text;
+
+      const ist = formatZone(d, 'Asia/Kolkata');
+      document.getElementById('ref-ist').textContent = ist.text;  // IST has no DST
+    }
+  }
+</script>
+
+</body>
+</html>
